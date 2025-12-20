@@ -202,7 +202,7 @@ export default function AudioLipSyncPlayer({
       </div>
 
       {/* Mantém controls para debug. Em produção, você pode remover. */}
-      <audio ref={audioRef} preload="none" style={{ width: "100%" }} />
+      <audio ref={audioRef} controls preload="none" style={{ width: "100%" }} />
     </div>
   );
 }
