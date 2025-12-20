@@ -1,9 +1,6 @@
-import { useParams } from "react-router-dom";
 import AudioLipSyncPlayer from "../components/Audio/AudioLipSyncPlayer";
 
 export default function Lesson() {
-  const { id } = useParams();
-
   return (
     <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
       <p>Olá! Bem-vindo ao Saylo.</p>
@@ -28,12 +25,14 @@ export default function Lesson() {
       </p>
 
 
-{/* https://rive.app/marketplace/5628-11215-wave-hear-and-talk/ */}
+      {/* https://rive.app/marketplace/5628-11215-wave-hear-and-talk/ */}
+      {/* https://rive.app/marketplace/21097-39950-custom-talking-avatar-real-time-lip-sync-for-your-app/ */}
+      {/* https://rive.app/marketplace/19795-37212-customizable-avatar/ */}
       <AudioLipSyncPlayer
         audioSrc="/audio/sample.mp3"
-        riveSrc="/rive/character (2).riv"
+        riveSrc="/rive/customizable-avatar.riv"
         stateMachine="State Machine 1"
-        mouthInputName="mouthOpen"
+        mouthInputName="numMouth"
       />
     </div>
   );

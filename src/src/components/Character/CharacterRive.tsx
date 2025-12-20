@@ -10,14 +10,18 @@ import {
 type Props = {
   src: string;
   stateMachine: string;
+  amplitude: number;      // 0..1
   isTalking: boolean;     // true quando áudio tocando
+  mouthInputName?: string;
   talkInputName?: string;
 };
 
 export default function CharacterRive({
   src,
   stateMachine,
+  amplitude,
   isTalking,
+  mouthInputName = "mouthOpen",
   talkInputName = "Talk",
 }: Props) {
   const { rive, RiveComponent } = useRive({
@@ -27,8 +31,22 @@ export default function CharacterRive({
     layout: new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
   });
 
+  const mouthOpen = useStateMachineInput(rive, stateMachine, mouthInputName);
   const talk = useStateMachineInput(rive, stateMachine, talkInputName);
 
+  useEffect(() => {
+    if (!mouthOpen) {
+      return;
+    }
+    
+    if(amplitude > 0.028){
+      // eslint-disable-next-line react-hooks/immutability
+      mouthOpen.value = 1;
+    }
+    else{
+      mouthOpen.value = 0;
+    }
+  }, [amplitude, mouthOpen]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/immutability

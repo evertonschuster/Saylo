@@ -24,7 +24,7 @@ async function downloadToBlobUrl(
   const res = await fetch(url, { signal, cache: "force-cache" });
   if (!res.ok) throw new Error(`Falha no download (${res.status})`);
 
-  // Se não tiver body (muito raro), cai no blob direto
+  // fallback: se não tiver streaming body
   if (!res.body) {
     const blob = await res.blob();
     return URL.createObjectURL(blob);
@@ -34,25 +34,32 @@ async function downloadToBlobUrl(
   const total = contentLengthHeader ? Number(contentLengthHeader) : 0;
 
   const reader = res.body.getReader();
-  const chunks: Uint8Array[] = [];
+
+  // Vamos acumular em ArrayBuffers "normais" para evitar ArrayBufferLike/SharedArrayBuffer
+  const parts: ArrayBuffer[] = [];
   let received = 0;
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    if (value) {
-      chunks.push(value);
-      received += value.length;
 
-      if (total > 0) {
-        onProgress(Math.min(1, received / total));
-      } else {
-        onProgress(null); // sem total, não dá pra percentual
-      }
+    if (value) {
+      // Copia o Uint8Array para um ArrayBuffer dedicado (compatível com BlobPart)
+      const ab = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
+      parts.push(ab);
+
+      received += value.byteLength;
+
+      if (total > 0) onProgress(Math.min(1, received / total));
+      else onProgress(null);
     }
   }
 
-  const blob = new Blob(chunks);
+  const blob = new Blob(parts, {
+    // opcional: se você souber o tipo, pode colocar
+    type: res.headers.get("Content-Type") ?? "audio/mpeg",
+  });
+
   return URL.createObjectURL(blob);
 }
 
@@ -60,6 +67,7 @@ export default function AudioLipSyncPlayer({
   audioSrc,
   riveSrc,
   stateMachine,
+  mouthInputName = "mouthOpen",
   talkInputName = "Talk",
 }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -169,7 +177,9 @@ export default function AudioLipSyncPlayer({
       <CharacterRive
         src={riveSrc}
         stateMachine={stateMachine}
+        amplitude={amplitude}
         isTalking={isTalking}
+        mouthInputName={mouthInputName}
         talkInputName={talkInputName}
       />
 
